@@ -1,0 +1,385 @@
+package gui;
+
+import java.util.Comparator;
+import java.util.Locale;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
+import kolekce.LinSeznam;
+import prostredky.Barva;
+import prostredky.Dodavka;
+import prostredky.DopravniProstredek;
+import prostredky.DopravniProstredekTyp;
+import prostredky.NakladniAutomobil;
+import prostredky.OsobniAutomobil;
+import prostredky.Znacka;
+import prostredky.Traktor;
+import sprava.Ovladani;
+import sprava.SpravaProstredku;
+
+/**
+ *
+ * @author Obadah Al Hariri
+ */
+public class MainFx extends Application {
+
+    private Ovladani<DopravniProstredek> spravce;
+    private Predicate<? super DopravniProstredek> filter = prostredek -> prostredek != null;
+    private final Comparator<DopravniProstredek> idKomparator = (t, t1) -> t.getId() - t1.getId();
+    private final Comparator<DopravniProstredek> spzKomparator = (t, t1) -> t.getSpz().compareTo(t1.getSpz());
+    private Consumer<String> error = error -> {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Chyba");
+        System.out.println(error);
+        alert.showAndWait();
+    };
+
+    private static final int SCENE_HEIGHT = 670;
+    private static final int SCENE_WIDTH = 1270;
+
+    private ListView<DopravniProstredek> listView;
+    private ObservableList<DopravniProstredek> items = FXCollections.observableArrayList();
+
+    public MainFx() {
+        spravce = SpravaProstredku.vytvorSpravce(error, LinSeznam<DopravniProstredek>::new);
+        spravce.nastavKomparator(idKomparator);
+
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        AnchorPane root = new AnchorPane();
+        Scene scene = new Scene(root, SCENE_WIDTH, SCENE_HEIGHT);
+
+        listView = createListView();
+
+        ControlPanelHBox controlPanelManage = createControlPanelManageCommands();
+        ControlPanelVBox controlPanelMove = createControlPanelMoveCommands();
+
+        root.getChildren().addAll(listView, controlPanelManage, controlPanelMove);
+
+        primaryStage.setTitle("Správa Dopravních Prostředků");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private ListView<DopravniProstredek> createListView() {
+        listView = new ListView<>();
+        listView.setPrefSize(SCENE_WIDTH - 170, SCENE_HEIGHT - 110);
+        listView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        listView.getSelectionModel().selectedItemProperty()
+                .addListener((changed, oldVal, newVal) -> System.out.println(newVal));
+        listView.setTranslateX(SCENE_HEIGHT - 655);
+        listView.setTranslateY(SCENE_WIDTH - 1255);
+
+        if (true) {
+            listView.setCellFactory((cell) -> {
+                return new ListCell<DopravniProstredek>() {
+                    @Override
+                    protected void updateItem(DopravniProstredek item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (!empty && item != null) {
+                            setText(item.toString());
+                        } else {
+                            setText(null);
+                        }
+                    }
+                };
+            });
+        }
+        return listView;
+    }
+
+    private ControlPanelHBox createControlPanelManageCommands() {
+        ControlPanelHBox controlPanelHBox = new ControlPanelHBox();
+        controlPanelHBox.setTranslateX(15);
+        controlPanelHBox.setTranslateY(575);
+        controlPanelHBox.setPrefSize(1255, 55);
+
+        controlPanelHBox.addButton("Generuj", generujHandler);
+        controlPanelHBox.addButton("Uložit", ulozitHandler);
+        controlPanelHBox.addButton("Načti", nactiHandler);
+        controlPanelHBox.addLabel("Novy");
+        controlPanelHBox.addComboBox(DopravniProstredekTyp.DopravniTypy(), novyHandler);
+        controlPanelHBox.addLabel("Filter");
+        controlPanelHBox.addComboBox(DopravniProstredekTyp.DopravniTypy(), filterHandler);
+        controlPanelHBox.addLabel("Najdi");
+        controlPanelHBox.addComboBox(DopravniProstredekTyp.DopravniTypy(), najdiHandler);
+        controlPanelHBox.addButton("Zálohuj", zalohujHandler);
+        controlPanelHBox.addButton("Obnov", obnovHandler);
+        controlPanelHBox.addButton("Zruš", zrusHandler);
+
+        return controlPanelHBox;
+    }
+
+    private ControlPanelVBox createControlPanelMoveCommands() {
+        ControlPanelVBox controlPanelVBox = new ControlPanelVBox();
+        controlPanelVBox.setTranslateX(1130);
+        controlPanelVBox.setTranslateY(15);
+        controlPanelVBox.setPrefSize(140, 560);
+
+        controlPanelVBox.addLabel("Procházení");
+        controlPanelVBox.addButton("První", prvniHandler);
+        controlPanelVBox.addButton("Další", dalsiHandler);
+        controlPanelVBox.addButton("Poslední", posledniHandler);
+        controlPanelVBox.addLabel("Příkazy");
+        controlPanelVBox.addButton("Edituj", editujHandler);
+        controlPanelVBox.addButton("Vyjmi", vyjmiHandler);
+        controlPanelVBox.addButton("Zobraz", zobrazHandler);
+        controlPanelVBox.addButton("Clear", clearHandler);
+        return controlPanelVBox;
+    }
+
+    private void renewListView() {
+        listView.getItems().clear();
+        spravce.stream()
+                .filter(filter)
+                .forEach(listView.getItems()::add);
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+
+    private final EventHandler<ActionEvent> generujHandler = event -> {
+        spravce.generujData(10);
+        renewListView();
+    };
+
+    private final EventHandler<ActionEvent> ulozitHandler = event -> {
+        Function<DopravniProstredek, String> mapperOutput = (prostredek) -> {
+            switch (prostredek.getTyp()) {
+                case OSOBNI_AUTOMOBIL:
+                    return String.format("oa, %s, %5.2f, %s, %s ", prostredek.getSpz(), prostredek.getHmotnost(),
+                            ((OsobniAutomobil) prostredek).getBarva().getBarva(),
+                            ((OsobniAutomobil) prostredek).getZnacka().getZnacka());
+                case NAKLADNI_AUTOMOBIL:
+                    return String.format("na, %s, %5.2f, %s, %d ", prostredek.getSpz(), prostredek.getHmotnost(),
+                            ((NakladniAutomobil) prostredek).getBarva().getBarva(),
+                            ((NakladniAutomobil) prostredek).getKapacitaKontejneru());
+                case DODAVKA:
+                    return String.format("do, %s, %5.0f, %f", prostredek.getSpz(), prostredek.getHmotnost(),
+                            ((Dodavka) prostredek).getTachometr());
+                case TRAKTOR:
+                    return String.format("tr, %s, %5.0f, %d", prostredek.getSpz(), prostredek.getHmotnost(),
+                            ((Traktor) prostredek).getRokVyroby());
+            }
+            return null;
+        };
+        spravce.ulozTextSoubor("prostredky.txt", mapperOutput);
+    };
+
+    private final EventHandler<ActionEvent> nactiHandler = event -> {
+        Function<String, DopravniProstredek> mapperInput = line -> {
+            DopravniProstredek prostredek = null;
+            if (line.length() == 0) {
+                return prostredek;
+            }
+            String[] items = line.split(",");
+            String spz = items[1].trim();
+            Double hmotnost = Double.valueOf(items[2].trim());
+            switch (items[0].trim().toLowerCase(Locale.US)) {
+                case "oa":
+                    Barva barvaOS = Barva.decode(items[3].trim());
+                    Znacka znacka = Znacka.decode(items[4].trim());
+                    prostredek = new OsobniAutomobil(spz, hmotnost, barvaOS, znacka);
+                    break;
+                case "na":
+                    Barva barvaNA = Barva.decode(items[3].trim());
+                    int kapacitaKontejneru = Integer.valueOf(items[4].trim());
+                    prostredek = new NakladniAutomobil(spz, hmotnost, barvaNA, kapacitaKontejneru);
+                    break;
+                case "do":
+                    Double tachometr = Double.valueOf(items[3].trim());
+                    prostredek = new Dodavka(spz, hmotnost, tachometr);
+                    break;
+                case "tr":
+                    int rokVyroby = Integer.valueOf(items[3].trim());
+                    prostredek = new Traktor(spz, hmotnost, rokVyroby);
+                    break;
+            }
+            return prostredek;
+        };
+        spravce.nactiTextSoubor("prostredky.txt", mapperInput);
+        renewListView();
+    };
+
+    private final EventHandler<ActionEvent> zalohujHandler = event -> {
+        spravce.ulozDoSouboru("zaloha.bin");
+    };
+
+    private EventHandler<ActionEvent> obnovHandler = event -> {
+        spravce.nactiZeSouboru("zaloha.bin");
+        renewListView();
+    };
+
+    private final EventHandler<ActionEvent> zrusHandler = event -> {
+        spravce.zrus();
+        renewListView();
+    };
+
+    private final EventHandler<ActionEvent> prvniHandler = event -> {
+        spravce.prejdiNaPrvniPolozku();
+        DopravniProstredek prostredek = spravce.dejKopiiAktualniPolozky();
+        listView.getSelectionModel().select(prostredek);
+    };
+
+    private final EventHandler<ActionEvent> dalsiHandler = event -> {
+        spravce.prejdiNaDalsiPolozku();
+        DopravniProstredek prostredek = spravce.dejKopiiAktualniPolozky();
+        listView.getSelectionModel().select(prostredek);
+    };
+
+    private final EventHandler<ActionEvent> posledniHandler = event -> {
+        spravce.prejdiNaPosledniPolozku();
+        DopravniProstredek prostredek = spravce.dejKopiiAktualniPolozky();
+        listView.getSelectionModel().select(prostredek);
+    };
+
+    private final EventHandler<ActionEvent> editujHandler = event -> {
+        DopravniProstredek prostredek = listView.getSelectionModel().getSelectedItem();
+        DopravniProstredekTyp typDialogu = listView.getSelectionModel().getSelectedItem().getTyp();
+        if (typDialogu == null) {
+            return;
+        }
+        Stage dialog = null;
+        switch (typDialogu) {
+            case OSOBNI_AUTOMOBIL:
+                dialog = DialogOsobniAutomobil.factoryDialogOsobniAutomobil(
+                        () -> (OsobniAutomobil) prostredek,
+                        t -> renewListView());
+                break;
+            case NAKLADNI_AUTOMOBIL:
+                dialog = DialogNakladniAutomobil.factoryDialogOsobniAutomobil(
+                        () -> (NakladniAutomobil) prostredek,
+                        t -> renewListView());
+                break;
+            case DODAVKA:
+                dialog = DialogDodavka.factoryDialogOsobniAutomobil(
+                        () -> (Dodavka) prostredek,
+                        t -> renewListView());
+                break;
+            case TRAKTOR:
+                dialog = DialogTraktor.factoryDialogOsobniAutomobil(
+                        () -> (Traktor) prostredek,
+                        t -> renewListView());
+                break;
+        }
+        dialog.showAndWait();
+    };
+
+    private final EventHandler<ActionEvent> vyjmiHandler = event -> {
+        DopravniProstredek prostredek = listView.getSelectionModel().getSelectedItem();
+        listView.getItems().remove(listView.getSelectionModel().getSelectedIndex());
+        spravce.nastavAktualniPolozku(prostredek);
+        spravce.vyjmiAktualniPolozku();
+        //renewListView();
+    };
+
+    private final EventHandler<ActionEvent> zobrazHandler = event -> {
+        renewListView();
+    };
+
+    private final EventHandler<ActionEvent> clearHandler = event -> {
+        listView.getItems().clear();
+    };
+
+    private final EventHandler<ActionEvent> novyHandler = event -> {
+        DopravniProstredekTyp typDialogu = ((ComboBox<DopravniProstredekTyp>) event.getSource()).getValue();
+        if (typDialogu == null) {
+            return;
+        }
+        // try attribute
+        //((ComboBox<DopravniProstredekTyp>) event.getSource()).getSelectionModel().clearSelection();
+        Stage dialog = null;
+        switch (typDialogu) {
+            case OSOBNI_AUTOMOBIL:
+                dialog = DialogOsobniAutomobil.factoryDialogOsobniAutomobil(null, prostredek -> {
+                    try {
+                        spravce.vlozPolozku(prostredek);
+                        renewListView();
+                    } catch (Exception e) {
+                        new Alert(Alert.AlertType.ERROR, "Překročena Kapacita Seznamu").showAndWait();
+                    }
+                });
+                break;
+            case NAKLADNI_AUTOMOBIL:
+                dialog = DialogNakladniAutomobil.factoryDialogOsobniAutomobil(null, prostredek -> {
+                    try {
+                        spravce.vlozPolozku(prostredek);
+                        renewListView();
+                    } catch (Exception e) {
+                        new Alert(Alert.AlertType.ERROR, "Překročena Kapacita Seznamu").showAndWait();
+                    }
+                });
+                break;
+            case DODAVKA:
+                dialog = DialogDodavka.factoryDialogOsobniAutomobil(null, prostredek -> {
+                    try {
+                        spravce.vlozPolozku(prostredek);
+                        renewListView();
+                    } catch (Exception e) {
+                        new Alert(Alert.AlertType.ERROR, "Překročena Kapacita Seznamu").showAndWait();
+                    }
+                });
+                break;
+            case TRAKTOR:
+                dialog = DialogTraktor.factoryDialogOsobniAutomobil(null, prostredek -> {
+                    try {
+                        spravce.vlozPolozku(prostredek);
+                        renewListView();
+                    } catch (Exception e) {
+                        new Alert(Alert.AlertType.ERROR, "Překročena Kapacita Seznamu").showAndWait();
+                    }
+                });
+                break;
+        }
+        dialog.showAndWait();
+        renewListView();
+    };
+
+    private final EventHandler<ActionEvent> filterHandler = event -> {
+        DopravniProstredekTyp typFilter = ((ComboBox<DopravniProstredekTyp>) event.getSource()).getValue();
+        if (typFilter == null) {
+            return;
+        }
+
+        //((ComboBox<DopravniProstredekTyp>) event.getSource()).getSelectionModel().clearSelection();
+        switch (typFilter) {
+            case OSOBNI_AUTOMOBIL:
+                filter = t -> t.getTyp() == DopravniProstredekTyp.OSOBNI_AUTOMOBIL;
+                break;
+            case NAKLADNI_AUTOMOBIL:
+                filter = t -> t.getTyp() == DopravniProstredekTyp.NAKLADNI_AUTOMOBIL;
+                break;
+            case DODAVKA:
+                filter = t -> t.getTyp() == DopravniProstredekTyp.DODAVKA;
+                break;
+            case TRAKTOR:
+                filter = t -> t.getTyp() == DopravniProstredekTyp.TRAKTOR;
+                break;
+        }
+        renewListView();
+        filter = t -> t != null;
+    };
+
+    private final EventHandler<ActionEvent> najdiHandler = event -> {
+
+    };
+}

@@ -1,0 +1,16 @@
+package idats_semprace_a_alhariri;
+
+/**
+ *
+ * @author Obadah Al Hariri
+ */
+public class IDATS_SemPrace_A_Alhariri {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        // TODO code application logic here
+    }
+
+}

@@ -1,0 +1,25 @@
+package sprava;
+
+/**
+ *
+ * @author Obadah Al Hariri
+ */
+public interface Sprava {
+
+    int importData(String soubor);
+
+    void vlozObec(Obec obec, enumPozice pozice, enumKraj kraj);
+
+    Obec zpristupniObec(enumPozice pozice, enumKraj Kraj);
+
+    Obec odeberObec(enumPozice pozice, enumKraj Kraj);
+
+    float zjistiPrumer(enumKraj Kraj);
+
+    void zobrazObce(enumKraj Kraj);
+
+    void zobrazObceNadPrumer(enumKraj Kraj);
+
+    void zrus(enumKraj Kraj);
+
+}

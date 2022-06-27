@@ -1,0 +1,180 @@
+package gui;
+
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import prostredky.Barva;
+import prostredky.OsobniAutomobil;
+import prostredky.Znacka;
+
+/**
+ *
+ * @author Obadah Al Hariri
+ */
+public class DialogOsobniAutomobil extends Stage {
+
+    private OsobniAutomobil osobniAutomobil; // DopravniProstredek
+    private boolean edit;
+    private Consumer<OsobniAutomobil> outputOperation;
+
+    private TextField spzTextField;
+    private TextField hmotnostTextField;
+    private ComboBox<Barva> barvaComboBox;
+    private ComboBox<Znacka> znackaComboBox;
+
+    public static DialogOsobniAutomobil factoryDialogOsobniAutomobil(Supplier<OsobniAutomobil> input, Consumer<OsobniAutomobil> output) {
+        return new DialogOsobniAutomobil(input, output);
+    }
+
+    private DialogOsobniAutomobil(Supplier<OsobniAutomobil> input, Consumer<OsobniAutomobil> output) {
+        // input
+        edit = input != null;
+        osobniAutomobil = (edit) ? input.get() : new OsobniAutomobil();
+
+        // output
+        outputOperation = output;
+
+        // general
+        setTitle("Dialog Osobní Automobil");
+        setWidth(350);
+        setHeight(400);
+        initStyle(StageStyle.UTILITY);
+        initModality(Modality.WINDOW_MODAL);
+        setScene(createScene());
+
+        // input
+        if (edit) {
+            set();
+        }
+    }
+
+    private Scene createScene() {
+        VBox root = new VBox();
+        root.setAlignment(Pos.CENTER);
+        root.setSpacing(20);
+
+        GridPane gridPane = new GridPane();
+        gridPane.setAlignment(Pos.CENTER);
+        gridPane.setPadding(new Insets(10));
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+
+        int row = 0;
+
+        spzTextField = addRowTextField(gridPane, "SPZ", row++);
+        hmotnostTextField = addRowTextField(gridPane, "Hmotnost", row++);
+        barvaComboBox = addRowComboBox(gridPane, "Barva", row++, Barva.values());
+        znackaComboBox = addRowComboBox(gridPane, "Značka", row++, Znacka.values());
+
+        Button ulozButton = new Button("Ulož");
+        ulozButton.setOnAction(e -> {
+            update();
+            outputOperation.accept(osobniAutomobil);
+            close();
+        });
+        gridPane.add(ulozButton, 1, ++row);
+
+//        Button ulozAZadejDalsiButton = new Button("Ulož A Zadej Další");
+//        ulozAZadejDalsiButton.setOnAction(e -> {
+//            
+//        });
+//        gridPane.add(ulozAZadejDalsiButton, 1, ++row);
+//        
+//        Button cancelButton = new Button("Cancel");
+//        ulozAZadejDalsiButton.setOnAction(e -> {
+//            close();
+//        });
+//        gridPane.add(cancelButton, 1, ++row);
+        root.getChildren().addAll(gridPane);
+
+        Scene scene = new Scene(root);
+        return scene;
+    }
+
+    private static TextField addRowTextField(GridPane gridPane, String labelName, int row) {
+        gridPane.add(new Label(labelName), 0, row);
+        TextField textField = new TextField();
+        gridPane.add(textField, 1, row);
+        return textField;
+    }
+
+    private static <T> ComboBox<T> addRowComboBox(GridPane gridPane, String labelName, int row, Enum[] enumList) {
+        gridPane.add(new Label(labelName), 0, row);
+        ComboBox<T> comboBox = new ComboBox(FXCollections.observableList(Arrays.asList(enumList)));
+        gridPane.add(comboBox, 1, row);
+        return comboBox;
+    }
+
+    private void update() {
+        try {
+            osobniAutomobil.setSpz(spzTextField.getText());
+            osobniAutomobil.setHmotnost(Double.valueOf(hmotnostTextField.getText()));
+            osobniAutomobil.setBarva(barvaComboBox.getValue());
+            osobniAutomobil.setZnacka(znackaComboBox.getValue());
+        } catch (NumberFormatException e) {
+            new Alert(Alert.AlertType.ERROR, "Něco je prázdné").showAndWait();
+        }
+    }
+
+    private void set() {
+        spzTextField.setText(osobniAutomobil.getSpz());
+        hmotnostTextField.setText(String.valueOf(osobniAutomobil.getHmotnost()));
+        barvaComboBox.setValue(osobniAutomobil.getBarva());
+        znackaComboBox.setValue(osobniAutomobil.getZnacka());
+    }
+
+    // me
+//    private static TextField addTextField(TextField textField, String text) {
+//        textField = new TextField();
+//        textField.setPromptText(text);
+//        return textField;
+//    }
+//
+//    private static <T> ComboBox<T> addComboBox(ComboBox<T> comboBox, Enum[] items) {
+//        comboBox = new ComboBox(FXCollections.observableList(Arrays.asList(items)));
+//        return comboBox;
+//    }
+//
+//    private static Button addButton(String name, EventHandler<ActionEvent> handler) {
+//        Button button = new Button(name);
+//        button.setOnAction(handler);
+//        return button;
+//    }
+//    private final EventHandler<ActionEvent> ulozHandler = event -> {
+//        update();
+//        outputOperation.accept(osobniAutomobil);
+//        hide();
+//    };
+    // me in createScene
+//        gridPane.add(new Label("SPZ"), 0, 0);
+//        gridPane.add(addTextField(spzTextField, "státní poznávací značka"), 1, 0);
+//        gridPane.add(new Label("Hmotnost"), 0, 1);
+//        gridPane.add(addTextField(spzTextField, "hmotnost"), 1, 1);
+//        gridPane.add(new Label("Barva"), 0, 2);
+//        gridPane.add(addComboBox(barvaComboBox, Barva.values()), 1, 2);
+//        gridPane.add(new Label("Značka"), 0, 3);
+//        gridPane.add(addComboBox(barvaComboBox, Znacka.values()), 1, 3);
+//        Button ulozButton = new Button("Ulož");
+//        ulozButton.setOnAction(event -> {
+//            update();
+//            outputOperation.accept(osobniAutomobil);
+//            hide();
+//        });
+//        gridPane.add(ulozButton, 1, 4);
+//        gridPane.add(addButton("Ulož A Zadej Další", ulozHandler), 1, 5);
+//        gridPane.add(addButton("Cancel", ulozHandler), 1, 6);
+}
