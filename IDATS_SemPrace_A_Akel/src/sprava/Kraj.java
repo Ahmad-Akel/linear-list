@@ -2,7 +2,7 @@ package sprava;
 
 /**
  *
- * @author Obadah Al Hariri
+ * @author Ahmad Akel
  */
 public enum Kraj {
     PHA("Hlavni mesto Praha"),

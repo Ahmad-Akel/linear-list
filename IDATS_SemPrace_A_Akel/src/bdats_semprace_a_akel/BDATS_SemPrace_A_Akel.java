@@ -1,12 +1,12 @@
-package idats_semprace_a_akel;
+package bdats_semprace_a_akel;
 
 import sprava.SpravaObyvatele;
 
 /**
  *
- * @author Obadah Al Hariri
+ * @author Ahmad Akel
  */
-public class IDATS_SemPrace_A_Akel {
+public class BDATS_SemPrace_A_Akel {
 
     /**
      * @param args the command line arguments

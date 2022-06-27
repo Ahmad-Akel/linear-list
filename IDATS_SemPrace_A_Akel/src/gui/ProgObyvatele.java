@@ -26,7 +26,7 @@ import static sprava.SpravaObyvatele.kraje;
 
 /**
  *
- * @author Obadah Al Hariri
+ * @author Ahmad Akel
  */
 public class ProgObyvatele extends Application {
 

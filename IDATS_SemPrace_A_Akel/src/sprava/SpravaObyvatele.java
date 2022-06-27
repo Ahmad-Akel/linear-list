@@ -14,7 +14,7 @@ import kolekce.*;
 
 /**
  *
- * @author Obadah Al Hariri
+ * @author Ahmad Akel
  */
 public class SpravaObyvatele implements Sprava {
 

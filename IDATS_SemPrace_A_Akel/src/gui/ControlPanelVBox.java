@@ -9,7 +9,7 @@ import javafx.scene.layout.VBox;
 
 /**
  *
- * @author Obadah Al Hariri
+ * @author Ahmad Akel
  */
 public class ControlPanelVBox extends VBox {
 

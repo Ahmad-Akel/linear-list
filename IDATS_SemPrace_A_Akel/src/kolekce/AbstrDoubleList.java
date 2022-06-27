@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /**
  *
- * @author Obadah Al Hariri
+ * @author Ahmad Akel
  */
 public class AbstrDoubleList<E> implements IAbstrDoubleList<E> {
 

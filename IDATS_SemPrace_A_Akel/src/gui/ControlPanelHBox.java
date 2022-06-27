@@ -12,7 +12,7 @@ import javafx.scene.layout.HBox;
 
 /**
  *
- * @author Obadah Al Hariri
+ * @author Ahmad Akel
  */
 public class ControlPanelHBox extends HBox {
 

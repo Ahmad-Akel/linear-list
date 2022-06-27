@@ -3,10 +3,10 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/idats_semprace_a_akel" isTestSource="false" packagePrefix="idats_semprace_a_akel" />
+      <sourceFolder url="file://$MODULE_DIR$/bdats_semprace_a_akel" isTestSource="false" packagePrefix="bdats_semprace_a_akel" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="IDATS_SemPrace_A_Akel" />
+    <orderEntry type="module" module-name="BDATS_SemPrace_A_Akel" />
   </component>
 </module>

@@ -23,7 +23,7 @@ import sprava.Pozice;
 
 /**
  *
- * @author Obadah Al Hariri
+ * @author Ahmad Akel
  */
 public class DialogObce extends Stage {
 
